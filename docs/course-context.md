@@ -43,7 +43,7 @@ Do not change these without asking the course designer.
 - No database.
 - No real LLM runtime API call.
 - No API keys or secrets.
-- No real personal data.
+- No real private data.
 - No real disaster case data.
 - No real map dependency as a core dependency unless explicitly requested.
 - Code license: MIT.
@@ -57,9 +57,9 @@ Do not change these without asking the course designer.
 - Mentor guide.
 - Expected answer.
 - The complete original report PDF.
-- Concrete interview materials.
-- Concrete process-design materials.
-- Change request materials.
+- 具體訪談材料。
+- 具體流程設計材料。
+- 具體變更請求材料。
 - Concrete transfer materials.
 - Concrete final-sharing materials.
 - Materials that let students preview Phase 0 follow-up releases.
@@ -89,7 +89,7 @@ The public starter may include:
 ## Data And Safety Boundary
 
 - Phase 0 original information is mock data.
-- Do not add real disaster reports, real addresses, real phone numbers, real personal names, or real locations.
+- Do not add real disaster reports, real addresses, real phone numbers, real people's names, or real locations.
 - Do not let AI decide which information is true.
 - Do not let AI decide rescue priority or volunteer action.
 - Do not display unconfirmed information as confirmed / verified fact.
@@ -124,4 +124,4 @@ The starter repo is acceptable when:
 - It has `docs/phase0-observations.md` and `docs/ai-log.md`.
 - It has AGENTS, SAFETY, DATA_SOURCES, README, TEAM.
 - It has CI and GitHub Pages workflow support.
-- It contains no hidden event data, mentor guide, expected answer, real personal data, secrets, real disaster data, or real LLM runtime calls.
+- It contains no hidden event data, mentor guide, expected answer, real private data, secrets, real disaster data, or real LLM runtime calls.

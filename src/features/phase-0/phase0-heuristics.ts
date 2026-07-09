@@ -10,6 +10,8 @@ export function createPhase0Judgement(
     messyRecordId: record.id,
     possibleKind: "unknown",
     confidence: "low",
+    priority: "medium",
+    owner: "待指派",
     evidence: ["尚未建立整理草稿：請由小組從原文標出判斷依據。"],
     blockers: isVerified
       ? ["仍需確認這筆資訊適合進入哪個後續流程。"]

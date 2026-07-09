@@ -61,4 +61,25 @@ describe("App", () => {
       screen.getByRole("button", { name: "刪除草稿" }),
     ).toBeInTheDocument();
   });
+
+  it("surfaces candidate observations and human review cues", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "整理工作台" }));
+
+    expect(screen.getByText("候選觀察")).toBeInTheDocument();
+    expect(screen.getAllByText(/人工確認/).length).toBeGreaterThan(0);
+  });
+
+  it("shows action triage and next-step guidance", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "整理工作台" }));
+
+    expect(screen.getByText("行動分流")).toBeInTheDocument();
+    expect(screen.getByText("可行動")).toBeInTheDocument();
+    expect(screen.getByText("待確認")).toBeInTheDocument();
+    expect(screen.getByText("暫緩")).toBeInTheDocument();
+    expect(screen.getAllByText(/下一步建議/).length).toBeGreaterThan(0);
+  });
 });

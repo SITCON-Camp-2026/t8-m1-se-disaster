@@ -8,6 +8,7 @@ import type {
   Phase0JudgementDraft,
   Phase0MessyRecord,
   Phase0PossibleKind,
+  Phase0Priority,
   Phase0SuggestedNextStep,
 } from "./phase0-types";
 
@@ -21,6 +22,12 @@ const kindOptions: Array<{ value: Phase0PossibleKind; label: string }> = [
 ];
 
 const confidenceOptions: Array<{ value: Phase0Confidence; label: string }> = [
+  { value: "low", label: "低" },
+  { value: "medium", label: "中" },
+  { value: "high", label: "高" },
+];
+
+const priorityOptions: Array<{ value: Phase0Priority; label: string }> = [
   { value: "low", label: "低" },
   { value: "medium", label: "中" },
   { value: "high", label: "高" },
@@ -40,89 +47,62 @@ const nextStepOptions: Array<{
 
 function createDraftForRecord(record: Phase0MessyRecord): Phase0JudgementDraft {
   const base = createPhase0Judgement(record);
+  const text = record.rawText.toLowerCase();
 
-  const overrides: Partial<Phase0JudgementDraft> = {};
+  const inferredKind: Phase0PossibleKind = /需要|協助|求助|搬|藥品|家具|長者|親友|家屬/.test(
+    text,
+  )
+    ? "help_request_candidate"
+    : /集合點|剩|不缺|盤點|更新|水電|雨鞋|道路|封閉|開放|停留|入口|資源/.test(
+        text,
+      )
+      ? "site_status_candidate"
+      : "unknown";
 
-  if (record.id === "M-001") {
-    overrides.possibleKind = "help_request_candidate";
-    overrides.confidence = "medium";
-    overrides.evidence = [
-      "來源是社群口耳，沒有確切地址與確認者。",
-      "看起來像求助候選，但不適合直接派工。",
-    ];
-    overrides.blockers = [
-      "缺少精確地點與確認人。",
-      "不能直接把這筆內容變成任務。",
-    ];
-    overrides.suggestedNextStep = "send_to_human_review";
-    overrides.unsafeToActDirectly = true;
-    overrides.humanReviewNote =
-      "人類修正：這像是求助候選，但仍需現場確認與地址補齊。";
-  } else if (record.id === "M-003") {
-    overrides.possibleKind = "site_status_candidate";
-    overrides.confidence = "medium";
-    overrides.evidence = [
-      "記錄提到資源需求已轉變，可能是地點狀態更新。",
-      "但原始內容沒有說明更新來源與時間。",
-    ];
-    overrides.blockers = [
-      "資源狀態可能已變更，但沒有可追溯來源。",
-      "不能直接把它當成已確認的現場狀態。",
-    ];
-    overrides.suggestedNextStep = "ask_for_more_info";
-    overrides.unsafeToActDirectly = true;
-    overrides.humanReviewNote =
-      "人類修正：這段話更像地點狀態更新，而不是已確認任務。";
-  } else if (record.id === "M-009") {
-    overrides.possibleKind = "site_status_candidate";
-    overrides.confidence = "high";
-    overrides.evidence = [
-      "現場志工提供了集合點與限制條件。",
-      "內容比一般社群貼文更具現場脈絡。",
-    ];
-    overrides.blockers = [
-      "仍然缺少官方公告同步與完整上下文。",
-      "不能直接把它當成正式公告。",
-    ];
-    overrides.suggestedNextStep = "create_site_update_suggestion";
-    overrides.unsafeToActDirectly = true;
-    overrides.humanReviewNote =
-      "人類修正：這筆資料值得留作候選更新，但不應直接發布。";
-  } else if (record.id === "M-010") {
-    overrides.possibleKind = "site_status_candidate";
-    overrides.confidence = "high";
-    overrides.evidence = [
-      "記錄有明確的現場盤點與剩餘物資數量。",
-      "看起來像一筆可留存的現場狀態更新。",
-    ];
-    overrides.blockers = [
-      "仍需確認盤點者身份與更新時間。",
-      "不能直接把這些數字當成官方統計。",
-    ];
-    overrides.suggestedNextStep = "create_site_update_suggestion";
-    overrides.unsafeToActDirectly = true;
-    overrides.humanReviewNote =
-      "人類修正：這筆看起來品質較高，但仍應保留為候選更新。";
-  } else if (record.id === "M-011") {
-    overrides.possibleKind = "help_request_candidate";
-    overrides.confidence = "medium";
-    overrides.evidence = [
-      "描述了潛在需要協助搬家具的個案。",
-      "但涉及個人位置與隱私，不能直接公開。",
-    ];
-    overrides.blockers = [
-      "缺少當事人同意與完整定位資訊。",
-      "不能直接轉成任務流程。",
-    ];
-    overrides.suggestedNextStep = "send_to_human_review";
-    overrides.unsafeToActDirectly = true;
-    overrides.humanReviewNote =
-      "人類修正：這很像需要協助的案例，但必須先由人員進一步確認隱私與安全。";
+  const evidence = [
+    ...base.evidence,
+    inferredKind === "unknown"
+      ? "原文內容仍不足以安全判定候選類型，請由人類比對上下文。"
+      : `原文中出現與${inferredKind === "help_request_candidate" ? "求助" : "地點狀態"}相關線索。`,
+  ];
+
+  const blockers = [...base.blockers];
+  if (record.verificationStatus !== "verified") {
+    blockers.push("來源與查核狀態仍未達到可直接行動門檻。");
   }
+  if (record.sourceType === "social_post") {
+    blockers.push("社群貼文來源未確認，應保持待人工確認。");
+  }
+  if (record.sourceType === "phone_call") {
+    blockers.push("這是轉述或外部來源，尚需確認說明者與情境。");
+  }
+
+  const suggestedNextStep: Phase0SuggestedNextStep =
+    record.sourceType === "social_post" && record.verificationStatus !== "verified"
+      ? "send_to_human_review"
+      : inferredKind === "help_request_candidate"
+        ? "send_to_human_review"
+        : inferredKind === "site_status_candidate" &&
+            (record.sourceType === "volunteer_update" ||
+              record.sourceType === "field_report")
+          ? "create_site_update_suggestion"
+          : "ask_for_more_info";
 
   return {
     ...base,
-    ...overrides,
+    possibleKind: inferredKind,
+    confidence: inferredKind === "unknown" ? "low" : "medium",
+    priority:
+      record.sourceType === "social_post" || record.sourceType === "phone_call"
+        ? "high"
+        : "medium",
+    owner: "待指派",
+    evidence,
+    blockers,
+    suggestedNextStep,
+    unsafeToActDirectly: true,
+    humanReviewNote: undefined,
+    conflictNote: undefined,
   };
 }
 
@@ -282,6 +262,30 @@ export function Phase0Workbench({
                 </label>
 
                 <label>
+                  優先級
+                  <select
+                    value={currentDraft.priority}
+                    onChange={(event) =>
+                      updateDraftField("priority", event.target.value as Phase0Priority)
+                    }
+                  >
+                    {priorityOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  負責角色
+                  <input
+                    value={currentDraft.owner}
+                    onChange={(event) => updateDraftField("owner", event.target.value)}
+                  />
+                </label>
+
+                <label>
                   下一步
                   <select
                     value={currentDraft.suggestedNextStep}
@@ -355,6 +359,16 @@ export function Phase0Workbench({
                         "humanReviewNote",
                         event.target.value || undefined,
                       )
+                    }
+                  />
+                </label>
+
+                <label>
+                  資訊衝突備註
+                  <textarea
+                    value={currentDraft.conflictNote ?? ""}
+                    onChange={(event) =>
+                      updateDraftField("conflictNote", event.target.value || undefined)
                     }
                   />
                 </label>

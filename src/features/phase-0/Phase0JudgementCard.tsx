@@ -16,6 +16,12 @@ const confidenceLabels: Record<Phase0JudgementDraft["confidence"], string> = {
   high: "高",
 };
 
+const priorityLabels: Record<Phase0JudgementDraft["priority"], string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+};
+
 const nextStepLabels: Record<
   Phase0JudgementDraft["suggestedNextStep"],
   string
@@ -62,6 +68,18 @@ export function Phase0JudgementCard({
           <dt>下一步</dt>
           <dd>{nextStepLabels[judgement.suggestedNextStep]}</dd>
         </div>
+        <div>
+          <dt>優先級</dt>
+          <dd>{priorityLabels[judgement.priority]}</dd>
+        </div>
+        <div>
+          <dt>負責角色</dt>
+          <dd>{judgement.owner}</dd>
+        </div>
+        <div>
+          <dt>衝突備註</dt>
+          <dd>{judgement.conflictNote ?? "無"}</dd>
+        </div>
       </dl>
 
       <p>
@@ -70,6 +88,35 @@ export function Phase0JudgementCard({
           {judgement.unsafeToActDirectly ? "不可直接行動" : "仍需確認情境"}
         </strong>
       </p>
+
+      <section>
+        <h4>行動分流</h4>
+        <ul>
+          <li>
+            <strong>可行動</strong>：{judgement.unsafeToActDirectly ? "否" : "視情境而定"}
+          </li>
+          <li>
+            <strong>待確認</strong>：{judgement.suggestedNextStep === "send_to_human_review" ? "是" : "否"}
+          </li>
+          <li>
+            <strong>暫緩</strong>：{judgement.unsafeToActDirectly ? "是" : "否"}
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h4>下一步建議</h4>
+        <p>{nextStepLabels[judgement.suggestedNextStep]}</p>
+      </section>
+
+      <section>
+        <h4>候選觀察</h4>
+        <p>
+          {judgement.humanReviewNote
+            ? "這筆資料已被標記為需要人工確認，並保留為候選觀察。"
+            : "這筆資料仍是候選觀察，未被視為正式任務或已確認事實。"}
+        </p>
+      </section>
 
       {judgement.humanReviewNote ? (
         <section>

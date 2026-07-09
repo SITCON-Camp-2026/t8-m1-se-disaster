@@ -17,6 +17,8 @@ export type Phase0SuggestedNextStep =
   | "create_site_update_suggestion"
   | "do_not_use_yet";
 
+export type Phase0Priority = "low" | "medium" | "high";
+
 export type Phase0MessyRecord = {
   id: string;
   rawText: string;
@@ -29,9 +31,12 @@ export type Phase0JudgementDraft = {
   messyRecordId: string;
   possibleKind: Phase0PossibleKind;
   confidence: Phase0Confidence;
+  priority: Phase0Priority;
+  owner: string;
   evidence: string[];
   blockers: string[];
   suggestedNextStep: Phase0SuggestedNextStep;
   unsafeToActDirectly: boolean;
   humanReviewNote?: string;
+  conflictNote?: string;
 };

@@ -45,17 +45,20 @@ describe("App", () => {
     expect(screen.getAllByText("未查核").length).toBeGreaterThan(0);
   });
 
-  it("keeps draft CRUD as learner work instead of starter output", () => {
+  it("lets learners create, edit, and reset draft judgements", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "整理工作台" }));
 
-    expect(screen.getByText("尚未建立整理草稿")).toBeInTheDocument();
+    expect(screen.getByText(/已建立 \d+\/\d+ 份整理草稿/)).toBeInTheDocument();
     expect(
-      screen.getByText(/請 agent 加上建立、編輯、刪除或重設整理草稿/),
+      screen.getByRole("button", { name: /建立草稿/ }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText(/已產生 \d+ 筆安全邊界草稿/),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: "重設為安全預設" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "刪除草稿" }),
+    ).toBeInTheDocument();
   });
 });

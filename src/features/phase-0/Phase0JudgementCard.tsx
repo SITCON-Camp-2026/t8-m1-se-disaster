@@ -39,15 +39,14 @@ export function Phase0JudgementCard({
     <article className="judgement-card">
       <div className="judgement-card__header">
         <div>
-          <p className="eyebrow">Starter 安全預設</p>
-          <h3>尚未建立整理草稿</h3>
+          <p className="eyebrow">整理草稿</p>
+          <h3>可編輯的候選判斷</h3>
         </div>
         <StatusBadge status={record.verificationStatus} />
       </div>
 
       <p>
-        這張卡只保留保守的安全邊界，不是 agent 對這筆資料的整理答案。請讓 coding
-        agent 實作可建立、編輯與刪除的整理草稿。
+        這份草稿是下一位協作者可以修正與討論的候選結果，並不是正式資料模型。
       </p>
 
       <dl className="judgement-summary">
@@ -72,8 +71,15 @@ export function Phase0JudgementCard({
         </strong>
       </p>
 
+      {judgement.humanReviewNote ? (
+        <section>
+          <h4>人類修正</h4>
+          <p>{judgement.humanReviewNote}</p>
+        </section>
+      ) : null}
+
       <section>
-        <h4>目前只有安全預設</h4>
+        <h4>判斷依據</h4>
         <ul>
           {judgement.evidence.map((item) => (
             <li key={item}>{item}</li>
